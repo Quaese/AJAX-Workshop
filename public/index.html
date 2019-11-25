@@ -9,25 +9,42 @@
     window.addEventListener('load', function() {
       var xhr,
 
-        makeRequest = function(id) {
+        makeGetRequest = function(id) {
           xhr = new XMLHttpRequest();
 
           if (!xhr) return false;
-
-          // xhr.responseType = "json";
 
           xhr.onreadystatechange = xhrCallback;
           xhr.open('GET', '/json?id=' + id);
           xhr.send();
         },
 
+        makePostRequest = function(id) {
+          var xhr = new XMLHttpRequest();
+
+          xhr.onreadystatechange = function() {
+            if (xhr.readyState === 4 && xhr.status === 200) {
+              // response contains JSON object
+              var res = xhr.response;
+
+              if (res.error) {
+                outputPostElem.innerHTML = res.message;
+              } else {
+                outputPostElem.innerHTML = res.name + " (geb: " + res.date + ")";
+              }
+            }
+          };
+          
+          // use JSON as response type
+          xhr.responseType = "json";
+          xhr.open("POST", "/json");
+          xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+          xhr.send("id=" + id);
+        },
+
         xhrCallback = function() {
           if (xhr.readyState === 4 && xhr.status === 200) {
-              // if responseType === 'json'
-              // console.log(xhr.response);
-
-              console.log(JSON.parse(xhr.responseText));
-
+              // response contains JSON string
               var res = JSON.parse(xhr.responseText);
 
               if (res.error) {
@@ -39,21 +56,36 @@
         },
 
         button = document.getElementById("startRequest"),
+        buttonPost = document.getElementById("startPostRequest"),
         userId = document.getElementById("userId"),
-        outputElem = document.getElementById("outputId");
+        outputElem = document.getElementById("outputId"),
+        outputPostElem = document.getElementById("outputPost");
 
       button.addEventListener("click", function() {
         var id = isNaN(Number(userId.value)) ? "1" : userId.value;
 
-        makeRequest(id);
+        makeGetRequest(id);
+      });
+
+      buttonPost.addEventListener("click", function() {
+        var id = isNaN(Number(userId.value)) ? "1" : userId.value;
+
+        makePostRequest(id);
       });
 
     })
     </script>
   </head>
   <body>
+    <h2>UserID</h2>
     <p><label for="userId">UserId</label><input type="text" id="userId" value="1"></p>
+
+    <h2>GET-Request</h2>
     <button id="startRequest">start</button>
     <p id="outputId"></p>
+
+    <h2>POST-Request</h2>
+    <button id="startPostRequest">start</button>
+    <p id="outputPost"></p>
   </body>
 </html>
